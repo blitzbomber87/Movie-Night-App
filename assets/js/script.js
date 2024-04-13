@@ -1,23 +1,34 @@
-// api credentials for tmdb
-const options = {
-    method: 'GET',
-    headers: {
-      accept: 'application/json',
-      Authorization: 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJkZTFkZTliZmM4MWJjYmY3YWVjOGE0OTNjNTVjMDlmNCIsInN1YiI6IjY2MTQ4ZjI4NmM4NDkyMDE2MmZjY2QyNyIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.1_c18yDf2syYp8DPtlQLVrnTe8xjGrAiN03eQa7-9vQ'
-    }
-  };
+// grab references to the important DOM elements
+const movieTitleInput = $("#movie-title");
+const searchBtn = $("#search");
 
-// retrieves trending movies from response and displays the top 10
-function displayTrending() {
-    const requestURL = "https://api.themoviedb.org/3/movie/popular?language=en-US&page=1"
-      
-    fetch(requestURL, options)
+// api key for tmdb
+const apiKey = "8beab362f984c637f891ce523f758c61"
+
+function searchMovie(event) {
+    event.preventDefault();
+    
+    const requestURL = `https://api.themoviedb.org/3/search/movie?query=${movieTitleInput.val()}&include_adult=false&language=en-US&page=1&api_key=${apiKey}`
+
+    console.log
+    fetch(requestURL)
         .then(function(response) {
             return response.json();
         })
         .then(function(data) {
             console.log(data);
-        
+        })
+}
+
+// retrieves trending movies from response and displays the top 10
+function displayTrending() {
+    const requestURL = `https://api.themoviedb.org/3/movie/popular?language=en-US&page=1&api_key=${apiKey}`
+      
+    fetch(requestURL)
+        .then(function(response) {
+            return response.json();
+        })
+        .then(function(data) {
             // loop through the response data and grab the movie poster, title, and id
             for (let i=0; i < 10; i++) {
                 moviePoster = data.results[i].poster_path;
@@ -32,14 +43,16 @@ function displayTrending() {
 
 $(document).ready(function () {
     displayTrending();
-})
 
-$('#link').click(function () {
-    var src = 'http://www.youtube.com/v/FSi2fJALDyQ&amp;autoplay=1';
-    $('#myModal').modal('show');
-    $('#myModal iframe').attr('src', src);
-});
+    searchBtn.on("click", searchMovie);
 
-$('#myModal button').click(function () {
-    $('#myModal iframe').removeAttr('src');
+    $('#link').click(function () {
+        var src = 'http://www.youtube.com/v/FSi2fJALDyQ&amp;autoplay=1';
+        $('#myModal').modal('show');
+        $('#myModal iframe').attr('src', src);
+    });
+    
+    $('#myModal button').click(function () {
+        $('#myModal iframe').removeAttr('src');
+    });
 });
