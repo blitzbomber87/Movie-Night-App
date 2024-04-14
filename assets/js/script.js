@@ -1,22 +1,73 @@
 // grab references to the important DOM elements
 const movieTitleInput = $("#movie-title");
 const searchBtn = $("#search");
+const searchResults = $("#search-results");
+const resultsHeader = searchResults.children().eq(0);
 
 // api key for tmdb
 const apiKey = "8beab362f984c637f891ce523f758c61"
 
+// remove header and list items in search results
+function removeSearchResults() {
+    resultsHeader.html("");
+    searchResults.children("li").remove();
+}
+
+// create list item for search results using information from response
+function renderSearchResults(data, i) {
+    const releaseYear = dayjs(data.results[i].release_date).format("YYYY");
+
+    const resultItem = $("<li>")
+        .addClass("list-group-item")
+        .attr("data-id", data.results[i].id)
+        .html(`${data.results[i].title} (${releaseYear})`);
+
+    return resultItem;
+}
+
+// accepts and fetches response for user input/movie title
+// displays up to 5 movie titles in search results
 function searchMovie(event) {
+    // prevent default behavior
     event.preventDefault();
     
     const requestURL = `https://api.themoviedb.org/3/search/movie?query=${movieTitleInput.val()}&include_adult=false&language=en-US&page=1&api_key=${apiKey}`
 
-    console.log
     fetch(requestURL)
         .then(function(response) {
             return response.json();
         })
         .then(function(data) {
-            console.log(data);
+            
+            // if there are no results, show error message
+            if (data.total_results === 0 || data === null) {
+                // removes previous search results, if any
+                removeSearchResults();
+
+                resultsHeader.html(`No results found for "${movieTitleInput.val()}"`);
+
+                // clear user input
+                movieTitleInput.val("");
+            } else {
+                // removes previous search results, if any
+                removeSearchResults();
+
+                resultsHeader.html(`Search results for '${movieTitleInput.val()}':`);
+                
+                // show up to 5 results
+                if (data.total_results >= 5) {
+                    for (let i=0; i < 5; i++) {
+                        searchResults.append(renderSearchResults(data, i));
+                    }
+                } else {
+                    for (let i=0; i < data.total_results; i++) {
+                        searchResults.append(renderSearchResults(data, i));
+                    }
+                }
+
+                // clear user input
+                movieTitleInput.val("");
+            }
         })
 }
 
@@ -35,8 +86,10 @@ function displayTrending() {
                 imgURL = `https://image.tmdb.org/t/p/w200/${moviePoster}`
                 $("img").eq(i)
                     .attr("src", imgURL)
-                    .attr("data-id", data.results[i].id)
-                    .attr("data-title", data.results[i].original_title);
+                    .attr("alt", `Movie poster for ${data.results[i].title}`)
+                    .attr("data-id", data.results[i].id);
+                $("figcaption").eq(i)
+                    .html(data.results[i].title)
             }
         })
 }
