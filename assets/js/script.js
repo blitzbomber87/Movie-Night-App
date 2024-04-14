@@ -3,6 +3,9 @@ const movieTitleInput = $("#movie-title");
 const searchBtn = $("#search");
 const searchResults = $("#search-results");
 const resultsHeader = searchResults.children().eq(0);
+const modal = $(".modal");
+const closeBtn = $(".btn-close");
+const movie = $(".movie");
 
 // api key for tmdb
 const apiKey = "8beab362f984c637f891ce523f758c61"
@@ -82,9 +85,9 @@ function displayTrending() {
         .then(function(data) {
             // loop through the response data and grab the movie poster, title, and id
             for (let i=0; i < 10; i++) {
-                moviePoster = data.results[i].poster_path;
-                imgURL = `https://image.tmdb.org/t/p/w200/${moviePoster}`
-                $("img").eq(i)
+                const moviePoster = data.results[i].poster_path;
+                const imgURL = `https://image.tmdb.org/t/p/w200/${moviePoster}`
+                $("img[class*='movie']").eq(i)
                     .attr("src", imgURL)
                     .attr("alt", `Movie poster for ${data.results[i].title}`)
                     .attr("data-id", data.results[i].id);
@@ -94,72 +97,98 @@ function displayTrending() {
         })
 }
 
+// Function to open modal and load video
+function openModal(event) {
+    // retrieve movie id from data attribute
+    let movieID = event.target.dataset.id;
+
+    // tmdb api request url
+    const tmdbRequestURL = `https://api.themoviedb.org/3/movie/${movieID}?api_key=${apiKey}`;
+
+    // Show modal
+    // modal.style.display = "block";
+    modal.show();
+
+    // Close modal when user clicks on 'x' button
+    // var closeBtn = document.getElementsByClassName("close")[0];
+    // closeBtn.onclick = function() {
+    //     modal.style.display = "none";
+    //     player.stopVideo(); // Stop video when modal is closed
+    // };
+    closeBtn.on("click", function() {
+        modal.hide();
+        // player.stopVideo();
+    });
+
+    // fetch movie data from tmdb API
+    fetch(tmdbRequestURL)
+        .then(function(response) {
+            return response.json();
+        })
+        .then(function(data) {
+            console.log(data);
+            const moviePoster = data.poster_path;
+            const imgURL = `https://image.tmdb.org/t/p/w200/${moviePoster}`
+
+            // retrieves information from response data
+            $(".modal-title").html(data.title);
+            $("#modal-poster")
+                .attr("src", imgURL)
+                .attr("alt", `Movie poster for ${data.title}`);
+            $("#summary").html(data.overview);
+        })
+
+
+    // // Fetch movie data from TMDB API
+    // fetch(tmdbRequestURL)
+    //     .then(function(response) {
+    //         return response.json;
+    //     }) 
+    //     .then(function(data) {
+    //         // Get YouTube video key
+    //         var videoKey = data.results[0].key;
+
+    //         // Create YouTube player
+    //         var player = new YT.Player('player', {
+    //             height: '360',
+    //             width: '640',
+    //             videoId: videoKey,
+    //             events: {
+    //                 'onReady': onPlayerReady,
+    //                 'onStateChange': onPlayerStateChange
+    //             }
+    //         });
+
+    //         // Function to autoplay video when player is ready
+    //         function onPlayerReady(event) {
+    //             event.target.playVideo();
+    //         }
+
+    //         // Function to stop video when modal is closed
+    //         function onPlayerStateChange(event) {
+    //             if (event.data == YT.PlayerState.ENDED) {
+    //                 modal.style.display = "none";
+    //             }
+    //         }
+    //     })
+    //     .catch(error => console.error('Error:', error));
+}
+
 $(document).ready(function () {
     displayTrending();
 
     searchBtn.on("click", searchMovie);
 
-    $('#link').click(function () {
-        var src = 'http://www.youtube.com/v/FSi2fJALDyQ&amp;autoplay=1';
-        $('#myModal').modal('show');
-        $('#myModal iframe').attr('src', src);
-    });
+    // $('#link').on("click", function () {
+    //     var src = 'http://www.youtube.com/v/FSi2fJALDyQ&amp;autoplay=1';
+    //     $('#myModal').modal('show');
+    //     $('#myModal iframe').attr('src', src);
+    // });
     
-    $('#myModal button').click(function () {
-        $('#myModal iframe').removeAttr('src');
-    });
+    // $('#myModal button').click(function () {
+    //     $('#myModal iframe').removeAttr('src');
+    // });
+
+    movie.on("click", openModal);
+    searchResults.on("click", ".list-group-item", openModal);
 });
-
-// Function to open modal and load video
-function openModal(movieId) {
-    // Show modal
-    var modal = document.getElementById("myModal");
-    modal.style.display = "block";
-
-    // Close modal when user clicks on 'x' button
-    var closeBtn = document.getElementsByClassName("close")[0];
-    closeBtn.onclick = function() {
-        modal.style.display = "none";
-        player.stopVideo(); // Stop video when modal is closed
-    };
-
-
-    // Fetch movie data from TMDB API
-    fetch('https://api.themoviedb.org/3/movie/' + movieId + '/videos?api_key=8beab362f984c637f891ce523f758c61')
-        .then(response => response.json())
-        .then(data => {
-            // Get YouTube video key
-            var videoKey = data.results[0].key;
-
-            // Create YouTube player
-            var player = new YT.Player('player', {
-                height: '360',
-                width: '640',
-                videoId: videoKey,
-                events: {
-                    'onReady': onPlayerReady,
-                    'onStateChange': onPlayerStateChange
-                }
-            });
-
-            // Function to autoplay video when player is ready
-            function onPlayerReady(event) {
-                event.target.playVideo();
-            }
-
-            // Function to stop video when modal is closed
-            function onPlayerStateChange(event) {
-                if (event.data == YT.PlayerState.ENDED) {
-                    modal.style.display = "none";
-                }
-            }
-        })
-        .catch(error => console.error('Error:', error));
-}
-
-// Event listener for image click
-document.getElementById("movieImage").addEventListener("click", function() {
-    openModal("550"); // Example movie ID (Fight Club)
-});
-
-
