@@ -109,3 +109,57 @@ $(document).ready(function () {
         $('#myModal iframe').removeAttr('src');
     });
 });
+
+// Function to open modal and load video
+function openModal(movieId) {
+    // Show modal
+    var modal = document.getElementById("myModal");
+    modal.style.display = "block";
+
+    // Close modal when user clicks on 'x' button
+    var closeBtn = document.getElementsByClassName("close")[0];
+    closeBtn.onclick = function() {
+        modal.style.display = "none";
+        player.stopVideo(); // Stop video when modal is closed
+    };
+
+
+    // Fetch movie data from TMDB API
+    fetch('https://api.themoviedb.org/3/movie/' + movieId + '/videos?api_key=8beab362f984c637f891ce523f758c61')
+        .then(response => response.json())
+        .then(data => {
+            // Get YouTube video key
+            var videoKey = data.results[0].key;
+
+            // Create YouTube player
+            var player = new YT.Player('player', {
+                height: '360',
+                width: '640',
+                videoId: videoKey,
+                events: {
+                    'onReady': onPlayerReady,
+                    'onStateChange': onPlayerStateChange
+                }
+            });
+
+            // Function to autoplay video when player is ready
+            function onPlayerReady(event) {
+                event.target.playVideo();
+            }
+
+            // Function to stop video when modal is closed
+            function onPlayerStateChange(event) {
+                if (event.data == YT.PlayerState.ENDED) {
+                    modal.style.display = "none";
+                }
+            }
+        })
+        .catch(error => console.error('Error:', error));
+}
+
+// Event listener for image click
+document.getElementById("movieImage").addEventListener("click", function() {
+    openModal("550"); // Example movie ID (Fight Club)
+});
+
+
