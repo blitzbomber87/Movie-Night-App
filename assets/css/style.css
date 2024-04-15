@@ -101,6 +101,23 @@
   background: #1c1a8a;
 }
 
+/* movie poster */
+.poster {
+  position: relative;
+  max-width: 200px;
+}
+
+.add {
+  position: absolute;
+  bottom: 15px;
+  right: 15px;
+  filter: drop-shadow(2px 2px rgba(0, 0, 0, 0.5))
+}
+
+figcaption {
+  max-width: 200px;
+}
+
 /* responsiveness - On small screens, display the navbar vertically instead of horizontally */
 @media screen and (max-width: 600px) {
   .topnav .search-container {
