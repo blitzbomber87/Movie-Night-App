@@ -6,9 +6,11 @@ const resultsHeader = searchResults.children().eq(0);
 const modal = $(".modal");
 const closeBtn = $(".btn-close");
 const movie = $(".movie");
+const video = $("iframe");
 
-// api key for tmdb
-const apiKey = "8beab362f984c637f891ce523f758c61"
+// api key for tmdb and google
+const apiKeyTMDB = "8beab362f984c637f891ce523f758c61";
+const apiKeyGoogle = "AIzaSyAJLkU5bqlhEG9W26-CAn8RjLRD_iq924s";
 
 // remove header and list items in search results
 function removeSearchResults() {
@@ -23,6 +25,7 @@ function renderSearchResults(data, i) {
     const resultItem = $("<li>")
         .addClass("list-group-item")
         .attr("data-id", data.results[i].id)
+        .attr("data-title", data.results[i].title)
         .html(`${data.results[i].title} (${releaseYear})`);
 
     return resultItem;
@@ -34,7 +37,7 @@ function searchMovie(event) {
     // prevent default behavior
     event.preventDefault();
     
-    const requestURL = `https://api.themoviedb.org/3/search/movie?query=${movieTitleInput.val()}&include_adult=false&language=en-US&page=1&api_key=${apiKey}`
+    const requestURL = `https://api.themoviedb.org/3/search/movie?query=${movieTitleInput.val()}&include_adult=false&language=en-US&page=1&api_key=${apiKeyTMDB}`
 
     fetch(requestURL)
         .then(function(response) {
@@ -76,7 +79,7 @@ function searchMovie(event) {
 
 // retrieves trending movies from response and displays the top 10
 function displayTrending() {
-    const requestURL = `https://api.themoviedb.org/3/movie/popular?language=en-US&page=1&api_key=${apiKey}`
+    const requestURL = `https://api.themoviedb.org/3/movie/popular?language=en-US&page=1&api_key=${apiKeyTMDB}`
       
     fetch(requestURL)
         .then(function(response) {
@@ -90,7 +93,8 @@ function displayTrending() {
                 $("img[class*='movie']").eq(i)
                     .attr("src", imgURL)
                     .attr("alt", `Movie poster for ${data.results[i].title}`)
-                    .attr("data-id", data.results[i].id);
+                    .attr("data-id", data.results[i].id)
+                    .attr("data-title", data.results[i].title)
                 $("figcaption").eq(i)
                     .html(data.results[i].title)
             }
@@ -101,94 +105,61 @@ function displayTrending() {
 function openModal(event) {
     // retrieve movie id from data attribute
     let movieID = event.target.dataset.id;
+    let movieTitle = event.target.dataset.title;
 
-    // tmdb api request url
-    const tmdbRequestURL = `https://api.themoviedb.org/3/movie/${movieID}?api_key=${apiKey}`;
+    // request urls for tmdb and youtube APIs
+    const tmdbRequestURL = `https://api.themoviedb.org/3/movie/${movieID}?api_key=${apiKeyTMDB}`;
+    const youtubeRequestURL = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=1&q=${movieTitle}+trailer&type=video&videoEmbeddable=true&key=${apiKeyGoogle}`;
 
-    // Show modal
-    // modal.style.display = "block";
+    // show modal
     modal.show();
 
-    // Close modal when user clicks on 'x' button
-    // var closeBtn = document.getElementsByClassName("close")[0];
-    // closeBtn.onclick = function() {
-    //     modal.style.display = "none";
-    //     player.stopVideo(); // Stop video when modal is closed
-    // };
+    // close modal and stop video from playing when user clicks on 'x' button
     closeBtn.on("click", function() {
         modal.hide();
-        // player.stopVideo();
+        video.removeAttr("src");
     });
 
-    // fetch movie data from tmdb API
+    // fetch movie data from tmdb api
     fetch(tmdbRequestURL)
         .then(function(response) {
             return response.json();
         })
         .then(function(data) {
-            console.log(data);
             const moviePoster = data.poster_path;
             const imgURL = `https://image.tmdb.org/t/p/w200/${moviePoster}`
 
-            // retrieves information from response data
+            // retrieves movie information from response data
             $(".modal-title").html(data.title);
             $("#modal-poster")
                 .attr("src", imgURL)
                 .attr("alt", `Movie poster for ${data.title}`);
             $("#summary").html(data.overview);
         })
+    
+    // fetch movie trailer from youtube api
+    fetch(youtubeRequestURL)
+        .then(function(response) {
+            return response.json();
+        })
+        .then(function(data) {
+            // retrieve video id from response data
+            const videoID = data.items[0].id.videoId;
+            const videoURL = `https://www.youtube.com/embed/${videoID}`;
 
-
-    // // Fetch movie data from TMDB API
-    // fetch(tmdbRequestURL)
-    //     .then(function(response) {
-    //         return response.json;
-    //     }) 
-    //     .then(function(data) {
-    //         // Get YouTube video key
-    //         var videoKey = data.results[0].key;
-
-    //         // Create YouTube player
-    //         var player = new YT.Player('player', {
-    //             height: '360',
-    //             width: '640',
-    //             videoId: videoKey,
-    //             events: {
-    //                 'onReady': onPlayerReady,
-    //                 'onStateChange': onPlayerStateChange
-    //             }
-    //         });
-
-    //         // Function to autoplay video when player is ready
-    //         function onPlayerReady(event) {
-    //             event.target.playVideo();
-    //         }
-
-    //         // Function to stop video when modal is closed
-    //         function onPlayerStateChange(event) {
-    //             if (event.data == YT.PlayerState.ENDED) {
-    //                 modal.style.display = "none";
-    //             }
-    //         }
-    //     })
-    //     .catch(error => console.error('Error:', error));
+            // attach video url to iframe src attribute
+            video.attr("src", videoURL);
+        })
 }
 
 $(document).ready(function () {
+    // show trending/popular movies
     displayTrending();
 
+    // show results when user searches for a movie
     searchBtn.on("click", searchMovie);
 
-    // $('#link').on("click", function () {
-    //     var src = 'http://www.youtube.com/v/FSi2fJALDyQ&amp;autoplay=1';
-    //     $('#myModal').modal('show');
-    //     $('#myModal iframe').attr('src', src);
-    // });
-    
-    // $('#myModal button').click(function () {
-    //     $('#myModal iframe').removeAttr('src');
-    // });
-
+    // open modal when either clicking on a movie poster or a search result
     movie.on("click", openModal);
     searchResults.on("click", ".list-group-item", openModal);
 });
