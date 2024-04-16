@@ -7,6 +7,7 @@ const modal = $(".modal");
 const closeBtn = $(".btn-close");
 const movie = $(".movie");
 const video = $("iframe");
+const addBtn = $(".add");
 
 // api key for tmdb and google
 const apiKeyTMDB = "8beab362f984c637f891ce523f758c61";
@@ -152,6 +153,17 @@ function openModal(event) {
         })
 }
 
+function addToList(event) {
+    console.log(event)
+    if (event.target.dataset.button === "add") {
+        event.target.src = "./assets/img/minus.png";
+        event.target.dataset.button = "remove";
+    } else {
+        event.target.src = "./assets/img/plus.png";
+        event.target.dataset.button = "add";
+    }
+}
+
 $(document).ready(function () {
     // show trending/popular movies
     displayTrending();
@@ -162,4 +174,6 @@ $(document).ready(function () {
     // open modal when either clicking on a movie poster or a search result
     movie.on("click", openModal);
     searchResults.on("click", ".list-group-item", openModal);
+
+    addBtn.on("click", addToList)
 });
