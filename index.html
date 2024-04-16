@@ -15,8 +15,8 @@
     <body>
         <div class="hero-image">
             <div class="hero-text">
-            <h1>Movie Night Database</h1>
-            <p>The movie database created to make your movie night better!!</p>
+                <h1>Movie Night Database</h1>
+                <p>The movie database created to make your movie night better!!</p>
             </div>
         </div>
         <div class="topnav">
@@ -24,10 +24,10 @@
             <a href="favorites.html">Favorites</a>
             <a href="#contact">Contact</a>
             <div class="search-container">
-            <form>
-                <input type="text" placeholder="Title Search.." name="search" id="movie-title">
-                <button type="button" id="search">Search</button>
-            </form>
+                <form>
+                    <input type="text" placeholder="Title Search.." name="search" id="movie-title">
+                    <button type="button" id="search">Search</button>
+                </form>
             </div>
         </div>
       
@@ -41,14 +41,13 @@
                     </div>
                     <div class="modal-body">
                         <div class="row" id="movie-details">
-                            <img class="col-2" id="modal-poster">
-                          <!-- Add favorites button to modal-->
-                          <span class="add" src="./assets/img/plus.png" data-button="add" title="Add to favorites"> </span>
-                          <!-- Add ratings to modal -->
-                          <p class="col-8" id="rating"></p> 
+                            <img class="col-4" id="modal-poster">
                             <p class="col-8" id="summary"></p>
                         </div>
+                        <p id="add-favorites">+ Add to favorites</p>
                         <iframe class="my-4" width="100%" height="350"></iframe>
+                        <p id="rating"></p> 
+                        <div class="accordion accordion-flush" id="reviews"></div>
                     </div>
                 </div>
             </div>

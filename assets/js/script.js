@@ -5,8 +5,9 @@ const searchResults = $("#search-results");
 const resultsHeader = searchResults.children().eq(0);
 const modal = $(".modal");
 const closeBtn = $(".btn-close");
-const movie = $(".movie");
+const movie = $(".movie-list");
 const video = $("iframe");
+const reviews = $("#reviews");
 const addBtn = $(".add");
 
 // api key for tmdb and google
@@ -102,16 +103,52 @@ function displayTrending() {
         })
 }
 
+// creates review for accordion element using information from fetch response
+function renderReviews(data, i) {
+    const reviewerRating = data.results[i].author_details.rating;
+
+    // if the reviewer didn't give a ratingm, show  "n/a'"
+    if (reviewerRating === null) {
+        reviewerRating = "N/A";
+    }
+
+    const accordionItem = $("<div>").addClass("accordion-item");
+    const accordionHeader = $("<h5>")
+        .addClass("accordion-header")
+        .attr("id", `heading${i}`);
+    const collapseButton = $("<button>")
+        .addClass("accordion-button collapsed")
+        .attr("type", "button")
+        .attr("data-bs-toggle", "collapse")
+        .attr("data-bs-target", `#collapse${i}`)
+        .attr("aria-expanded", "false")
+        .attr("aria-controls", `collapse${i}`)
+        .html(`Review by ${data.results[i].author} || Rating: ${data.results[i].author_details.rating}`);
+    const accordionCollapse = $("<div>")
+        .addClass("accordion-collapse collapse")
+        .attr("id", `collapse${i}`)
+        .attr("aria-labelledby", `heading${i}`)
+        .attr("data-bs-parent", "#reviews");
+    const accordionBody = $("<div>").addClass("accordion-body");
+    const review = $("<p>").html(data.results[i].content);
+
+    accordionBody.append(review);
+    accordionCollapse.append(accordionBody);
+    accordionHeader.append(collapseButton);
+    accordionItem.append(accordionHeader, accordionCollapse);
+
+    return accordionItem;
+}
+
 // Function to open modal and load video
 function openModal(event) {
     // retrieve movie id from data attribute
     let movieID = event.target.dataset.id;
     let movieTitle = event.target.dataset.title;
 
-    // request urls for tmdb and youtube APIs
+    // request urls for tmdb movies & reviews and youtube APIs
     const tmdbRequestURL = `https://api.themoviedb.org/3/movie/${movieID}?api_key=${apiKeyTMDB}`;
-     //request url for tmdb movie reviews
-     const movieReviewURL = `https://api.themoviedb.org/3/movie/${movieID}/reviews?language=en-US&page=1?api_key=${apiKeyTMDB}`;
+    const movieReviewRequestURL = `https://api.themoviedb.org/3/movie/${movieID}/reviews?language=en-US&page=1&api_key=${apiKeyTMDB}`;
     const youtubeRequestURL = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=1&q=${movieTitle}+trailer&type=video&videoEmbeddable=true&key=${apiKeyGoogle}`;
 
     // show modal
@@ -131,15 +168,31 @@ function openModal(event) {
         .then(function(data) {
             const moviePoster = data.poster_path;
             const imgURL = `https://image.tmdb.org/t/p/w200/${moviePoster}`
-
+            const releaseYear = dayjs(data.release_date).format("YYYY");
+            
             // retrieves movie information from response data
-            $(".modal-title").html(data.title);
+            $(".modal-title").html(`${data.title} (${releaseYear})`);
             $("#modal-poster")
                 .attr("src", imgURL)
                 .attr("alt", `Movie poster for ${data.title}`);
                  //retreive each movie rating
-                $("#rating").html(data.vote_average);  
+                $("#rating").html(`Overall rating: ${data.vote_average.toFixed(2)} / 10`);  
             $("#summary").html(data.overview);
+        })
+    
+    // fetch movie reviews from tmdb api
+    fetch(movieReviewRequestURL)
+        .then(function(response) {
+            return response.json();
+        })
+        .then(function(data){
+            // remove any reviews from other movies, if anu
+            reviews.children().remove();
+
+            // show first 3 reviews
+            for (let i=0; i < 3; i++) {
+                reviews.append(renderReviews(data,i));
+            }
         })
     
     // fetch movie trailer from youtube api
@@ -155,20 +208,6 @@ function openModal(event) {
             // attach video url to iframe src attribute
             video.attr("src", videoURL);
         })
-
-         //retreive movie review data
-         fetch(movieReviewURL)
-         .then(function(response) {
-             return response.json();
-         })
- 
-         .then(function(data) {
-            
-             //Changes here...
-             $("#reviews").html(data.results);
-         })
-
-         
 }
 
 // toggle add/remove button for favorites list
