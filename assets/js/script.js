@@ -7,6 +7,7 @@ const modal = $(".modal");
 const closeBtn = $(".btn-close");
 const movie = $(".movie");
 const video = $("iframe");
+const addBtn = $(".add");
 
 // api key for tmdb and google
 const apiKeyTMDB = "8beab362f984c637f891ce523f758c61";
@@ -152,6 +153,21 @@ function openModal(event) {
         })
 }
 
+// toggle add/remove button for favorites list
+function toggleButton(event) {
+    // if button is +, change image, data attribute, and tooltip to remove
+    if (event.target.dataset.button === "add") {
+        event.target.src = "./assets/img/minus.png";
+        event.target.dataset.button = "remove";
+        event.target.title = "Remove from favorites"
+    // if button is -, change image, data attribute, and tooltip to add
+    } else { 
+        event.target.src = "./assets/img/plus.png";
+        event.target.dataset.button = "add";
+        event.target.title = "Add to favorites"
+    }
+}
+
 $(document).ready(function () {
     // show trending/popular movies
     displayTrending();
@@ -162,4 +178,6 @@ $(document).ready(function () {
     // open modal when either clicking on a movie poster or a search result
     movie.on("click", openModal);
     searchResults.on("click", ".list-group-item", openModal);
+
+    addBtn.on("click", toggleButton);
 });
