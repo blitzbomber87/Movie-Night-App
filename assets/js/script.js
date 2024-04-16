@@ -153,14 +153,18 @@ function openModal(event) {
         })
 }
 
-function addToList(event) {
-    console.log(event)
+// toggle add/remove button for favorites list
+function toggleButton(event) {
+    // if button is +, change image, data attribute, and tooltip to remove
     if (event.target.dataset.button === "add") {
         event.target.src = "./assets/img/minus.png";
         event.target.dataset.button = "remove";
-    } else {
+        event.target.title = "Remove from favorites"
+    // if button is -, change image, data attribute, and tooltip to add
+    } else { 
         event.target.src = "./assets/img/plus.png";
         event.target.dataset.button = "add";
+        event.target.title = "Add to favorites"
     }
 }
 
@@ -175,5 +179,5 @@ $(document).ready(function () {
     movie.on("click", openModal);
     searchResults.on("click", ".list-group-item", openModal);
 
-    addBtn.on("click", addToList)
+    addBtn.on("click", toggleButton);
 });
