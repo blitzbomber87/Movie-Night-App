@@ -110,6 +110,8 @@ function openModal(event) {
 
     // request urls for tmdb and youtube APIs
     const tmdbRequestURL = `https://api.themoviedb.org/3/movie/${movieID}?api_key=${apiKeyTMDB}`;
+    //request url for tmdb movie reviews
+    const movieReviewURL = `https://api.themoviedb.org/3/movie/${movieID}/reviews?language=en-US&page=1?api_key=${apiKeyTMDB}`;
     const youtubeRequestURL = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=1&q=${movieTitle}+trailer&type=video&videoEmbeddable=true&key=${apiKeyGoogle}`;
 
     // show modal
@@ -135,6 +137,8 @@ function openModal(event) {
             $("#modal-poster")
                 .attr("src", imgURL)
                 .attr("alt", `Movie poster for ${data.title}`);
+                //retreive each movie rating
+            $("#rating").html(data.vote_average);
             $("#summary").html(data.overview);
         })
     
@@ -151,6 +155,18 @@ function openModal(event) {
             // attach video url to iframe src attribute
             video.attr("src", videoURL);
         })
+
+         //retreive movie review data
+         fetch(movieReviewURL)
+         .then(function(response) {
+             return response.json();
+         })
+ 
+         .then(function(data) {
+            
+             //Changes here...
+             $("#reviews").html(data.results);
+         })
 }
 
 // toggle add/remove button for favorites list
