@@ -32,6 +32,7 @@ function renderSearchResults(data, i) {
         .addClass("list-group-item")
         .attr("data-id", data.results[i].id)
         .attr("data-title", data.results[i].title)
+        .attr("data-year", releaseYear)
         .html(`${data.results[i].title} (${releaseYear})`);
 
     return resultItem;
@@ -95,6 +96,7 @@ function displayTrending() {
             // loop through the response data and grab the movie poster, title, and id
             for (let i = 0; i < 10; i++) {
                 const moviePoster = data.results[i].poster_path;
+                const releaseYear = dayjs(data.results[i].release_date).format("YYYY");
                 const imgURL = `https://image.tmdb.org/t/p/w200/${moviePoster}`
 
                 $("img[class*='movie']").eq(i)
@@ -109,8 +111,6 @@ function displayTrending() {
                 // loop through favorites array and change add button to remove for that poster
                 for (let x=0; x < favorites.length; x++) {
                     if (favorites[x] == data.results[i].id) {
-                        console.log(favorites[x])
-                        console.log(data.results[i].id)
                         addBtn.eq(i)
                         .attr("src", "./assets/img/minus.png")
                         .attr("data-button", "remove")
@@ -170,14 +170,13 @@ function openModal(event) {
     let movieID = event.target.dataset.id;
     let movieTitle = event.target.dataset.title;
 
-    console.log(event)
     // request urls for tmdb movies & reviews and youtube APIs
     const tmdbRequestURL = `https://api.themoviedb.org/3/movie/${movieID}?api_key=${apiKeyTMDB}`;
     const movieReviewRequestURL = `https://api.themoviedb.org/3/movie/${movieID}/reviews?language=en-US&page=1&api_key=${apiKeyTMDB}`;
-    const youtubeRequestURL = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=1&q=${movieTitle}+trailer&type=video&videoEmbeddable=true&key=${apiKeyGoogle}`;
+    const youtubeRequestURL = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=1&q=${movieTitle}+{}+trailer&type=video&videoEmbeddable=true&key=${apiKeyGoogle}`;
 
     // create the appropriate add/remove button on modal depending on the button on poster
-    if (event.target.nextElementSibling.dataset.button === "add") {
+    if (event.target.nextElementSibling.dataset.button === "add" || !favorites.includes(event.target.dataset.id)) {
         modalAddBtn
             .removeClass("btn-outline-danger")
             .addClass("btn-outline-success")
@@ -213,6 +212,7 @@ function openModal(event) {
             $(".modal-title").html(`${data.title} (${releaseYear})`);
             $("#modal-poster")
                 .attr("src", imgURL)
+                .attr("data-year", releaseYear)
                 .attr("alt", `Movie poster for ${data.title}`);
             //retrieve each movie rating
             $("#rating").html(`Overall rating: ${data.vote_average.toFixed(2)} / 10`);
@@ -327,7 +327,7 @@ function addToFavorites(event) {
 $(document).ready(function () {
     // run functions only if pathname contains index.html
     // src: https://stackoverflow.com/questions/4597050/how-to-check-if-the-url-contains-a-given-string
-    if (window.location.pathname.indexOf("/index.html") !==1) {
+    if (window.location.pathname.indexOf("/index.html") !==1 || window.location.pathname.endsWith()) {
         // display trending movies
         displayTrending();
 
