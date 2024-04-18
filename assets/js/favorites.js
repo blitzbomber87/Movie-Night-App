@@ -6,6 +6,8 @@ function renderFavoriteMovies(data) {
     // create movie card elements
     const moviePoster = data.poster_path;
     const imgURL = `https://image.tmdb.org/t/p/w200/${moviePoster}`
+    const releaseYear = dayjs(data.release_date).format("YYYY");
+    
     const figure = $("<figure>").addClass("col d-flex flex-column align-items-center");
     const div = $("<div>").addClass("poster");
     const img = $("<img>")
@@ -13,7 +15,8 @@ function renderFavoriteMovies(data) {
         .attr("src", imgURL)
         .attr("alt", `Movie poster for ${data.title}`)
         .attr("data-id", data.id)
-        .attr("data-title", data.title);
+        .attr("data-title", data.title)
+        .attr("data-year", releaseYear);
 
     const addBtn = $("<img>")
         .addClass("add")
