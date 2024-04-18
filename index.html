@@ -22,7 +22,6 @@
         <div class="topnav">
             <a class="active" href="index.html">Home</a>
             <a href="favorites.html">Favorites</a>
-            <a href="#contact">Contact</a>
             <div class="search-container">
                 <form>
                     <input type="text" placeholder="Title Search.." name="search" id="movie-title">
@@ -37,7 +36,7 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title"></h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <button type="button" class="btn-close close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         <div class="row" id="movie-details">
@@ -49,7 +48,8 @@
                         <div class="accordion accordion-flush" id="reviews"></div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" id="favorites" class="btn btn-outline-success">Add to Favorites</button>
+                        <button type="button" id="favorites" class="btn btn-outline-success" data-button="add" data-id="">Add to Favorites</button>
+                        <button type="button" class="btn btn-secondary close" data-bs-dismiss="modal">Close</button>
                     </div>
                 </div>
             </div>
@@ -57,12 +57,12 @@
         
         <main>
             <div id="search-results">
-                <h2></h2>
+                <h2 class="m-3"></h2>
                 <ul class="list-group my-2"></ul>
             </div>
             <div class="movie-container">
                 <div class="body-image">
-                    <h2>Popular</h2>
+                    <h2 class="m-3">Popular</h2>
                 </div>
                 <div class="row row-cols-2 row-cols-md-3 row-cols-lg-5 g-2 g-lg-3">
                     <figure class="col d-flex flex-column align-items-center d-flex flex-column align-items-center">
