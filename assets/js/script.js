@@ -13,7 +13,7 @@ const modalAddBtn = $("#favorites");
 
 // api key for tmdb and google
 const apiKeyTMDB = "8beab362f984c637f891ce523f758c61";
-const apiKeyGoogle = "AIzaSyAJLkU5bqlhEG9W26-CAn8RjLRD_iq924s";
+const apiKeyGoogle = "AIzaSyAAkZKVYA1Zu4GuZ_Uf2l0jBXuYIi7Egwo";
 
 // Retrieve existing favorites from localStorage or initialize an empty array
 let favorites = JSON.parse(localStorage.getItem("favorites")) || [];
