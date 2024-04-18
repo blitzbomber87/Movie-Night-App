@@ -128,7 +128,7 @@ function displayTrending() {
 
 // creates review for accordion element using information from fetch response
 function renderReviews(data, i) {
-    const reviewerRating = data.results[i].author_details.rating;
+    let reviewerRating = data.results[i].author_details.rating;
 
     // if the reviewer didn't give a rating, show  "n/a'"
     if (reviewerRating === null) {
@@ -147,7 +147,7 @@ function renderReviews(data, i) {
         .attr("data-bs-target", `#collapse${i}`)
         .attr("aria-expanded", "false")
         .attr("aria-controls", `collapse${i}`)
-        .html(`Review by ${data.results[i].author} || Rating: ${data.results[i].author_details.rating}`);
+        .html(`Review by ${data.results[i].author} || Rating: ${reviewerRating}`);
     const accordionCollapse = $("<div>")
         .addClass("accordion-collapse collapse")
         .attr("id", `collapse${i}`)
@@ -223,7 +223,6 @@ function openModal(event) {
         })
 
     // fetch movie reviews from tmdb api
-    console.log(youtubeRequestURL)
     fetch(movieReviewRequestURL)
         .then(function (response) {
             return response.json();
@@ -233,8 +232,8 @@ function openModal(event) {
             reviews.children().remove();
 
             // show up to first 3 reviews
-            if (data.length < 3) {
-                for (let i = 0; i < data.length; i++) {
+            if (data.total_results < 3) {
+                for (let i = 0; i < data.total_results; i++) {
                     reviews.append(renderReviews(data, i));
                 }
             } else {
