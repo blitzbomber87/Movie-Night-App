@@ -4,7 +4,7 @@ const searchBtn = $("#search");
 const searchResults = $("#search-results");
 const resultsHeader = searchResults.children().eq(0);
 const modal = $(".modal");
-const closeBtn = $(".btn-close");
+const closeBtn = $(".close");
 const movie = $(".movie-list");
 const video = $("iframe");
 const reviews = $("#reviews");
@@ -14,6 +14,9 @@ const modalAddBtn = $("#favorites");
 // api key for tmdb and google
 const apiKeyTMDB = "8beab362f984c637f891ce523f758c61";
 const apiKeyGoogle = "AIzaSyAJLkU5bqlhEG9W26-CAn8RjLRD_iq924s";
+
+// Retrieve existing favorites from localStorage or initialize an empty array
+let favorites = JSON.parse(localStorage.getItem("favorites")) || [];
 
 // remove header and list items in search results
 function removeSearchResults() {
@@ -29,6 +32,7 @@ function renderSearchResults(data, i) {
         .addClass("list-group-item")
         .attr("data-id", data.results[i].id)
         .attr("data-title", data.results[i].title)
+        .attr("data-year", releaseYear)
         .html(`${data.results[i].title} (${releaseYear})`);
 
     return resultItem;
@@ -92,17 +96,32 @@ function displayTrending() {
             // loop through the response data and grab the movie poster, title, and id
             for (let i = 0; i < 10; i++) {
                 const moviePoster = data.results[i].poster_path;
+                const releaseYear = dayjs(data.results[i].release_date).format("YYYY");
                 const imgURL = `https://image.tmdb.org/t/p/w200/${moviePoster}`
+
                 $("img[class*='movie']").eq(i)
                     .attr("src", imgURL)
                     .attr("alt", `Movie poster for ${data.results[i].title}`)
                     .attr("data-id", data.results[i].id)
                     .attr("data-title", data.results[i].title)
+
                 addBtn.eq(i)
                     .attr("data-id", data.results[i].id);
+
+                // loop through favorites array and change add button to remove for that poster
+                for (let x=0; x < favorites.length; x++) {
+                    if (favorites[x] == data.results[i].id) {
+                        addBtn.eq(i)
+                        .attr("src", "./assets/img/minus.png")
+                        .attr("data-button", "remove")
+                        .attr("title", "Remove from favorites");
+                    }
+                }
+
                 $("figcaption").eq(i)
-                    .html(data.results[i].title)
+                    .html(data.results[i].title);
             }
+
         })
 }
 
@@ -110,11 +129,12 @@ function displayTrending() {
 function renderReviews(data, i) {
     const reviewerRating = data.results[i].author_details.rating;
 
-    // if the reviewer didn't give a ratingm, show  "n/a'"
+    // if the reviewer didn't give a rating, show  "n/a'"
     if (reviewerRating === null) {
         reviewerRating = "N/A";
     }
 
+    // create accordion elements
     const accordionItem = $("<div>").addClass("accordion-item");
     const accordionHeader = $("<h5>")
         .addClass("accordion-header")
@@ -135,6 +155,7 @@ function renderReviews(data, i) {
     const accordionBody = $("<div>").addClass("accordion-body");
     const review = $("<p>").html(data.results[i].content);
 
+    // append accordion elements to appropriate parent
     accordionBody.append(review);
     accordionCollapse.append(accordionBody);
     accordionHeader.append(collapseButton);
@@ -152,8 +173,22 @@ function openModal(event) {
     // request urls for tmdb movies & reviews and youtube APIs
     const tmdbRequestURL = `https://api.themoviedb.org/3/movie/${movieID}?api_key=${apiKeyTMDB}`;
     const movieReviewRequestURL = `https://api.themoviedb.org/3/movie/${movieID}/reviews?language=en-US&page=1&api_key=${apiKeyTMDB}`;
-    const youtubeRequestURL = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=1&q=${movieTitle}+trailer&type=video&videoEmbeddable=true&key=${apiKeyGoogle}`;
+    const youtubeRequestURL = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=1&q=${movieTitle}+{}+trailer&type=video&videoEmbeddable=true&key=${apiKeyGoogle}`;
 
+    // create the appropriate add/remove button on modal depending on the button on poster
+    if (event.target.nextElementSibling.dataset.button === "add" || !favorites.includes(event.target.dataset.id)) {
+        modalAddBtn
+            .removeClass("btn-outline-danger")
+            .addClass("btn-outline-success")
+            .attr("data-button", "add")
+            .html("Add to Favorites");
+    } else {
+        modalAddBtn
+            .removeClass("btn-outline-success")
+            .addClass("btn-outline-danger")
+            .attr("data-button", "remove")
+            .html("Remove from Favorites");
+    }
     // show modal
     modal.show();
 
@@ -177,8 +212,9 @@ function openModal(event) {
             $(".modal-title").html(`${data.title} (${releaseYear})`);
             $("#modal-poster")
                 .attr("src", imgURL)
+                .attr("data-year", releaseYear)
                 .attr("alt", `Movie poster for ${data.title}`);
-            //retreive each movie rating
+            //retrieve each movie rating
             $("#rating").html(`Overall rating: ${data.vote_average.toFixed(2)} / 10`);
             $("#summary").html(data.overview);
             $("#favorites").attr("data-id", movieID);
@@ -190,12 +226,18 @@ function openModal(event) {
             return response.json();
         })
         .then(function (data) {
-            // remove any reviews from other movies, if anu
+            // remove any reviews from other movies, if any
             reviews.children().remove();
 
-            // show first 3 reviews
-            for (let i = 0; i < 3; i++) {
-                reviews.append(renderReviews(data, i));
+            // show up to first 3 reviews
+            if (reviews.length < 3) {
+                for (let i = 0; i < reviews.length; i++) {
+                    reviews.append(renderReviews(data, i));
+                }
+            } else {
+                for (let i = 0; i < 3; i++) {
+                    reviews.append(renderReviews(data, i));
+                }
             }
         })
 
@@ -215,54 +257,93 @@ function openModal(event) {
 }
 
 // toggle add/remove button for favorites list
-function toggleButton(event) {
+function toggleButton(event, movieID) {
     // if button is +, change image, data attribute, and tooltip to remove
-    if (event.target.dataset.button === "add") {
-        event.target.src = "./assets/img/minus.png";
-        event.target.dataset.button = "remove";
-        event.target.title = "Remove from favorites"
+    if (event.target.className === "add") {
+        if (event.target.dataset.button === "add") {
+            event.target.src = "./assets/img/minus.png";
+            event.target.dataset.button = "remove";
+            event.target.title = "Remove from favorites"
+
         // if button is -, change image, data attribute, and tooltip to add
+        } else {
+            event.target.src = "./assets/img/plus.png";
+            event.target.dataset.button = "add";
+            event.target.title = "Add to favorites"
+        }
     } else {
-        event.target.src = "./assets/img/plus.png";
-        event.target.dataset.button = "add";
-        event.target.title = "Add to favorites"
+        // if button is "Add to Favorites", change image, button class, data attribute, and inner html to remove
+        if (event.target.dataset.button === "add") {
+            event.target.className = "btn btn-outline-danger";
+            event.target.dataset.button = "remove";
+            event.target.innerHTML = "Remove from Favorites"
+
+            $(`.add[data-id=${movieID}]`)
+                .attr("src", "./assets/img/minus.png")
+                .attr("data-button", "remove")
+                .attr("title", "Remove from favorites");
+
+        // if button is "Remove from Favorites", change image, button class, data attribute, and inner html to add
+        } else {
+            event.target.className = "btn btn-outline-success";
+            event.target.dataset.button = "add";
+            event.target.innerHTML = "Add to Favorites"
+
+            $(`.add[data-id='${movieID}']`)
+                .attr("src", "./assets/img/plus.png")
+                .attr("data-button", "add")
+                .attr("title", "Add to favorites");
+        }
     }
 }
 
-// Function to add a movie to favorites
+// function to add/remove a movie to/from favorites array
 function addToFavorites(event) {
-    let movieID = parseInt(event.target.dataset.id);
+    let movieID = event.target.dataset.id;
     if (typeof (Storage) !== "undefined") {
-        // Retrieve existing favorites from localStorage or initialize an empty array
-        let favorites = JSON.parse(localStorage.getItem("favorites")) || [];
-
-        
-        // Check if the movie is already in favorites
-        if (!favorites.includes(movieID.toString())) {
+        // if the movie is not in favorites and the button is an add button
+        if (!favorites.includes(movieID) && event.target.dataset.button === "add") {
             // Add the movie to favorites
-            favorites.push(movieID.toString());
+            favorites.push(movieID);
+        
+        // if movie is  in favorites and the button is a remove button
+        } else if (favorites.includes(movieID) && event.target.dataset.button === "remove") {
+            // loop through favorites array to find index of movie id to remove it
+            for (let i=0; i < favorites.length; i++) {
+                if (favorites[i] === movieID) {
+                    favorites.splice(i, 1);
+                }
+            }
         }
+
         // Update localStorage with the new favorites array
         localStorage.setItem("favorites", JSON.stringify(favorites));
     }
 
-
+    // change add button to remove button, and vice versa
+    toggleButton(event, movieID);
 }
 
 $(document).ready(function () {
-
-
-    if (window.location.pathname === "/index.html") {
+    // run functions only if pathname contains index.html
+    // src: https://stackoverflow.com/questions/4597050/how-to-check-if-the-url-contains-a-given-string
+    if (window.location.pathname.indexOf("/index.html") !==1 || window.location.pathname.endsWith()) {
+        // display trending movies
         displayTrending();
+
+        // open modal when clicking on a movie poster
+        movie.on("click", openModal);
+
+        // add/remove movie to/from favorites list when user clicks the button on poster
+        addBtn.on("click", addToFavorites);
     }
 
     // show results when user searches for a movie
     searchBtn.on("click", searchMovie);
 
-    // open modal when either clicking on a movie poster or a search result
-    movie.on("click", openModal);
+    // open modal when clicking on a search result
     searchResults.on("click", ".list-group-item", openModal);
 
-    addBtn.on("click", addToFavorites);
+    // add/remove movie to/from favorites list when user clicks the button on modal
     modalAddBtn.on("click", addToFavorites);
 });
