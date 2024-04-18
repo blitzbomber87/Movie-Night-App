@@ -39,15 +39,15 @@ function renderSearchResults(data, i) {
 function searchMovie(event) {
     // prevent default behavior
     event.preventDefault();
-    
+
     const requestURL = `https://api.themoviedb.org/3/search/movie?query=${movieTitleInput.val()}&include_adult=false&language=en-US&page=1&api_key=${apiKeyTMDB}`
 
     fetch(requestURL)
-        .then(function(response) {
+        .then(function (response) {
             return response.json();
         })
-        .then(function(data) {
-            
+        .then(function (data) {
+
             // if there are no results, show error message
             if (data.total_results === 0 || data === null) {
                 // removes previous search results, if any
@@ -62,14 +62,14 @@ function searchMovie(event) {
                 removeSearchResults();
 
                 resultsHeader.html(`Search results for '${movieTitleInput.val()}':`);
-                
+
                 // show up to 5 results
                 if (data.total_results >= 5) {
-                    for (let i=0; i < 5; i++) {
+                    for (let i = 0; i < 5; i++) {
                         searchResults.append(renderSearchResults(data, i));
                     }
                 } else {
-                    for (let i=0; i < data.total_results; i++) {
+                    for (let i = 0; i < data.total_results; i++) {
                         searchResults.append(renderSearchResults(data, i));
                     }
                 }
@@ -83,14 +83,14 @@ function searchMovie(event) {
 // retrieves trending movies from response and displays the top 10
 function displayTrending() {
     const requestURL = `https://api.themoviedb.org/3/movie/popular?language=en-US&page=1&api_key=${apiKeyTMDB}`
-      
+
     fetch(requestURL)
-        .then(function(response) {
+        .then(function (response) {
             return response.json();
         })
-        .then(function(data) {
+        .then(function (data) {
             // loop through the response data and grab the movie poster, title, and id
-            for (let i=0; i < 10; i++) {
+            for (let i = 0; i < 10; i++) {
                 const moviePoster = data.results[i].poster_path;
                 const imgURL = `https://image.tmdb.org/t/p/w200/${moviePoster}`
                 $("img[class*='movie']").eq(i)
@@ -158,53 +158,53 @@ function openModal(event) {
     modal.show();
 
     // close modal and stop video from playing when user clicks on 'x' button
-    closeBtn.on("click", function() {
+    closeBtn.on("click", function () {
         modal.hide();
         video.removeAttr("src");
     });
 
     // fetch movie data from tmdb api
     fetch(tmdbRequestURL)
-        .then(function(response) {
+        .then(function (response) {
             return response.json();
         })
-        .then(function(data) {
+        .then(function (data) {
             const moviePoster = data.poster_path;
             const imgURL = `https://image.tmdb.org/t/p/w200/${moviePoster}`
             const releaseYear = dayjs(data.release_date).format("YYYY");
-            
+
             // retrieves movie information from response data
             $(".modal-title").html(`${data.title} (${releaseYear})`);
             $("#modal-poster")
                 .attr("src", imgURL)
                 .attr("alt", `Movie poster for ${data.title}`);
-                 //retreive each movie rating
-                $("#rating").html(`Overall rating: ${data.vote_average.toFixed(2)} / 10`);  
+            //retreive each movie rating
+            $("#rating").html(`Overall rating: ${data.vote_average.toFixed(2)} / 10`);
             $("#summary").html(data.overview);
             $("#favorites").attr("data-id", movieID);
         })
-    
+
     // fetch movie reviews from tmdb api
     fetch(movieReviewRequestURL)
-        .then(function(response) {
+        .then(function (response) {
             return response.json();
         })
-        .then(function(data){
+        .then(function (data) {
             // remove any reviews from other movies, if anu
             reviews.children().remove();
 
             // show first 3 reviews
-            for (let i=0; i < 3; i++) {
-                reviews.append(renderReviews(data,i));
+            for (let i = 0; i < 3; i++) {
+                reviews.append(renderReviews(data, i));
             }
         })
-    
+
     // fetch movie trailer from youtube api
     fetch(youtubeRequestURL)
-        .then(function(response) {
+        .then(function (response) {
             return response.json();
         })
-        .then(function(data) {
+        .then(function (data) {
             // retrieve video id from response data
             const videoID = data.items[0].id.videoId;
             const videoURL = `https://www.youtube.com/embed/${videoID}`;
@@ -221,8 +221,8 @@ function toggleButton(event) {
         event.target.src = "./assets/img/minus.png";
         event.target.dataset.button = "remove";
         event.target.title = "Remove from favorites"
-    // if button is -, change image, data attribute, and tooltip to add
-    } else { 
+        // if button is -, change image, data attribute, and tooltip to add
+    } else {
         event.target.src = "./assets/img/plus.png";
         event.target.dataset.button = "add";
         event.target.title = "Add to favorites"
@@ -231,37 +231,30 @@ function toggleButton(event) {
 
 // Function to add a movie to favorites
 function addToFavorites(event) {
-    console.log(event.target);
     let movieID = parseInt(event.target.dataset.id);
-    console.log(event.target);
-    if (typeof(Storage) !== "undefined") {
+    if (typeof (Storage) !== "undefined") {
         // Retrieve existing favorites from localStorage or initialize an empty array
         let favorites = JSON.parse(localStorage.getItem("favorites")) || [];
 
+        
         // Check if the movie is already in favorites
-        for (let i = 0; i < favorites.length; i++) { 
-            if (favorites[i] === movieID){
-                favorites.splice(i,1);
-            }
+        if (!favorites.includes(movieID.toString())) {
+            // Add the movie to favorites
+            favorites.push(movieID.toString());
         }
-
-        // Add the movie to favorites
-        favorites.push(movieID);
-
         // Update localStorage with the new favorites array
         localStorage.setItem("favorites", JSON.stringify(favorites));
-
-        console.log("Movie added to favorites.");
-    } else {
-        console.log("LocalStorage is not supported.");
     }
 
-    
+
 }
 
 $(document).ready(function () {
-    // show trending/popular movies
-    displayTrending();
+
+
+    if (window.location.pathname === "/index.html") {
+        displayTrending();
+    }
 
     // show results when user searches for a movie
     searchBtn.on("click", searchMovie);
@@ -273,4 +266,3 @@ $(document).ready(function () {
     addBtn.on("click", addToFavorites);
     modalAddBtn.on("click", addToFavorites);
 });
-
