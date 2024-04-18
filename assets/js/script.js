@@ -9,6 +9,7 @@ const movie = $(".movie-list");
 const video = $("iframe");
 const reviews = $("#reviews");
 const addBtn = $(".add");
+const modalAddBtn = $("#favorites");
 
 // api key for tmdb and google
 const apiKeyTMDB = "8beab362f984c637f891ce523f758c61";
@@ -97,6 +98,8 @@ function displayTrending() {
                     .attr("alt", `Movie poster for ${data.results[i].title}`)
                     .attr("data-id", data.results[i].id)
                     .attr("data-title", data.results[i].title)
+                addBtn.eq(i)
+                    .attr("data-id", data.results[i].id);
                 $("figcaption").eq(i)
                     .html(data.results[i].title)
             }
@@ -178,6 +181,7 @@ function openModal(event) {
                  //retreive each movie rating
                 $("#rating").html(`Overall rating: ${data.vote_average.toFixed(2)} / 10`);  
             $("#summary").html(data.overview);
+            $("#favorites").attr("data-id", movieID);
         })
     
     // fetch movie reviews from tmdb api
@@ -225,6 +229,36 @@ function toggleButton(event) {
     }
 }
 
+// Function to add a movie to favorites
+function addToFavorites(event) {
+    console.log(event.target);
+    let movieID = parseInt(event.target.dataset.id);
+    console.log(event.target);
+    if (typeof(Storage) !== "undefined") {
+        // Retrieve existing favorites from localStorage or initialize an empty array
+        let favorites = JSON.parse(localStorage.getItem("favorites")) || [];
+
+        // Check if the movie is already in favorites
+        for (let i = 0; i < favorites.length; i++) { 
+            if (favorites[i] === movieID){
+                favorites.splice(i,1);
+            }
+        }
+
+        // Add the movie to favorites
+        favorites.push(movieID);
+
+        // Update localStorage with the new favorites array
+        localStorage.setItem("favorites", JSON.stringify(favorites));
+
+        console.log("Movie added to favorites.");
+    } else {
+        console.log("LocalStorage is not supported.");
+    }
+
+    
+}
+
 $(document).ready(function () {
     // show trending/popular movies
     displayTrending();
@@ -236,5 +270,7 @@ $(document).ready(function () {
     movie.on("click", openModal);
     searchResults.on("click", ".list-group-item", openModal);
 
-    addBtn.on("click", toggleButton);
+    addBtn.on("click", addToFavorites);
+    modalAddBtn.on("click", addToFavorites);
 });
+
