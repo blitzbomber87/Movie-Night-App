@@ -178,6 +178,7 @@ function openModal(event) {
                  //retreive each movie rating
                 $("#rating").html(`Overall rating: ${data.vote_average.toFixed(2)} / 10`);  
             $("#summary").html(data.overview);
+            $("#favorites").attr("data-id", movieID);
         })
     
     // fetch movie reviews from tmdb api
@@ -238,3 +239,41 @@ $(document).ready(function () {
 
     addBtn.on("click", toggleButton);
 });
+
+// Function to add a movie to favorites
+function addToFavorites(event) {
+
+    let movieID = event.target.dataset.id;
+    console.log(event.target);
+    if (typeof(Storage) !== "undefined") {
+        // Retrieve existing favorites from localStorage or initialize an empty array
+        let favorites = JSON.parse(localStorage.getItem("favorites")) || [];
+
+        // Check if the movie is already in favorites
+        for (let i = 0; i < favorites.length; i++) { 
+            if (json.stringify(favorites[i]) === movieID){
+                favorites.splice(i,1);
+            }
+        }
+
+        // Add the movie to favorites
+        favorites.push(movieID);
+
+        // Update localStorage with the new favorites array
+        localStorage.setItem("favorites", JSON.stringify(favorites));
+
+        console.log("Movie added to favorites.");
+    } else {
+        console.log("LocalStorage is not supported.");
+    }
+
+    
+}
+
+// Example usage: Call this function when the favorites button is clicked
+document.getElementById("favorites").addEventListener("click", function() {
+    // const movieId = 123; // Placeholder movie ID
+    addToFavorites();
+}); 
+
+
