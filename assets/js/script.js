@@ -9,6 +9,7 @@ const movie = $(".movie-list");
 const video = $("iframe");
 const reviews = $("#reviews");
 const addBtn = $(".add");
+const modalAddBtn = $("#favorites");
 
 // api key for tmdb and google
 const apiKeyTMDB = "8beab362f984c637f891ce523f758c61";
@@ -97,6 +98,8 @@ function displayTrending() {
                     .attr("alt", `Movie poster for ${data.results[i].title}`)
                     .attr("data-id", data.results[i].id)
                     .attr("data-title", data.results[i].title)
+                addBtn.eq(i)
+                    .attr("data-id", data.results[i].id);
                 $("figcaption").eq(i)
                     .html(data.results[i].title)
             }
@@ -226,24 +229,10 @@ function toggleButton(event) {
     }
 }
 
-$(document).ready(function () {
-    // show trending/popular movies
-    displayTrending();
-
-    // show results when user searches for a movie
-    searchBtn.on("click", searchMovie);
-
-    // open modal when either clicking on a movie poster or a search result
-    movie.on("click", openModal);
-    searchResults.on("click", ".list-group-item", openModal);
-
-    addBtn.on("click", toggleButton);
-});
-
 // Function to add a movie to favorites
 function addToFavorites(event) {
-
-    let movieID = event.target.dataset.id;
+    console.log(event.target);
+    let movieID = parseInt(event.target.dataset.id);
     console.log(event.target);
     if (typeof(Storage) !== "undefined") {
         // Retrieve existing favorites from localStorage or initialize an empty array
@@ -251,7 +240,7 @@ function addToFavorites(event) {
 
         // Check if the movie is already in favorites
         for (let i = 0; i < favorites.length; i++) { 
-            if (json.stringify(favorites[i]) === movieID){
+            if (favorites[i] === movieID){
                 favorites.splice(i,1);
             }
         }
@@ -270,10 +259,18 @@ function addToFavorites(event) {
     
 }
 
-// Example usage: Call this function when the favorites button is clicked
-document.getElementById("favorites").addEventListener("click", function() {
-    // const movieId = 123; // Placeholder movie ID
-    addToFavorites();
-}); 
+$(document).ready(function () {
+    // show trending/popular movies
+    displayTrending();
 
+    // show results when user searches for a movie
+    searchBtn.on("click", searchMovie);
+
+    // open modal when either clicking on a movie poster or a search result
+    movie.on("click", openModal);
+    searchResults.on("click", ".list-group-item", openModal);
+
+    addBtn.on("click", addToFavorites);
+    modalAddBtn.on("click", addToFavorites);
+});
 
