@@ -104,12 +104,13 @@ function displayTrending() {
                     .attr("alt", `Movie poster for ${data.results[i].title}`)
                     .attr("data-id", data.results[i].id)
                     .attr("data-title", data.results[i].title)
+                    .attr("data-year", releaseYear);
 
                 addBtn.eq(i)
                     .attr("data-id", data.results[i].id);
 
                 // loop through favorites array and change add button to remove for that poster
-                for (let x=0; x < favorites.length; x++) {
+                for (let x = 0; x < favorites.length; x++) {
                     if (favorites[x] == data.results[i].id) {
                         addBtn.eq(i)
                         .attr("src", "./assets/img/minus.png")
@@ -169,11 +170,12 @@ function openModal(event) {
     // retrieve movie id from data attribute
     let movieID = event.target.dataset.id;
     let movieTitle = event.target.dataset.title;
+    let releaseYear = dayjs(event.target.dataset.year).format("YYYY");
 
     // request urls for tmdb movies & reviews and youtube APIs
     const tmdbRequestURL = `https://api.themoviedb.org/3/movie/${movieID}?api_key=${apiKeyTMDB}`;
     const movieReviewRequestURL = `https://api.themoviedb.org/3/movie/${movieID}/reviews?language=en-US&page=1&api_key=${apiKeyTMDB}`;
-    const youtubeRequestURL = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=1&q=${movieTitle}+{}+trailer&type=video&videoEmbeddable=true&key=${apiKeyGoogle}`;
+    const youtubeRequestURL = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=1&q=${movieTitle}+${releaseYear}+trailer&type=video&videoEmbeddable=true&key=${apiKeyGoogle}`;
 
     // create the appropriate add/remove button on modal depending on the button on poster
     if (event.target.nextElementSibling.dataset.button === "add" || !favorites.includes(event.target.dataset.id)) {
@@ -221,6 +223,7 @@ function openModal(event) {
         })
 
     // fetch movie reviews from tmdb api
+    console.log(youtubeRequestURL)
     fetch(movieReviewRequestURL)
         .then(function (response) {
             return response.json();
@@ -230,8 +233,8 @@ function openModal(event) {
             reviews.children().remove();
 
             // show up to first 3 reviews
-            if (reviews.length < 3) {
-                for (let i = 0; i < reviews.length; i++) {
+            if (data.length < 3) {
+                for (let i = 0; i < data.length; i++) {
                     reviews.append(renderReviews(data, i));
                 }
             } else {
@@ -327,7 +330,7 @@ function addToFavorites(event) {
 $(document).ready(function () {
     // run functions only if pathname contains index.html
     // src: https://stackoverflow.com/questions/4597050/how-to-check-if-the-url-contains-a-given-string
-    if (window.location.pathname.indexOf("/index.html") !==1 || window.location.pathname.endsWith()) {
+    if (window.location.pathname.indexOf("/index.html") !==1 || window.location.pathname.endsWith('/')) {
         // display trending movies
         displayTrending();
 
