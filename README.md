@@ -1,4 +1,5 @@
 # Group-2-Project-1: Movie Night Database
+Test
 ## Description
 This application is a movie database where users can search a movie title and view details on any movie. Additionally, they can add movies to a Favorites list, which can then be accessed on a separate page. 
 
